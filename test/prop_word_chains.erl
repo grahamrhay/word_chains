@@ -3,13 +3,15 @@
 -include_lib("proper/include/proper.hrl").
 -include_lib("eunit/include/eunit.hrl").
 
-prop_next_word_should_be_new() ->
+prop_next_words_should_be_near() ->
     ?FORALL({FirstWord, LastWord}, valid_words(),
         begin
             io:format("First word: ~p, Last word: ~p", [FirstWord, LastWord]),
-            NextWord = word_chains:next_word(FirstWord, LastWord),
-            io:format("Next word: ~p", [NextWord]),
-            NextWord =/= FirstWord
+            NextWords = word_chains:next_words(FirstWord),
+            io:format("Next words: ~p", [NextWords]),
+            InvalidWords = lists:filter(fun(W) -> word_chains:get_word_distance(W, FirstWord) =/= 1 end, NextWords),
+            io:format("Invalid words: ~p", [InvalidWords]),
+            length(InvalidWords) =:= 0
         end).
 
 valid_words() ->
@@ -38,3 +40,15 @@ word_list_last_word_test() ->
     WordList = word_chains:word_list(),
     LastWord = lists:last(WordList),
     ?assertEqual(LastWord, "zzzs").
+
+get_word_distance_same_word_test() ->
+    WordDistance = word_chains:get_word_distance("cat", "cat"),
+    ?assertEqual(0, WordDistance).
+
+get_word_distance_near_word_test() ->
+    WordDistance = word_chains:get_word_distance("cat", "cot"),
+    ?assertEqual(1, WordDistance).
+
+get_word_distance_far_word_test() ->
+    WordDistance = word_chains:get_word_distance("cat", "dog"),
+    ?assertEqual(3, WordDistance).
